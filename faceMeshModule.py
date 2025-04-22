@@ -5,6 +5,7 @@ from mediapipe.python.solutions.face_mesh_connections import FACEMESH_TESSELATIO
 from mediapipe.python.solutions.face_mesh_connections import FACEMESH_CONTOURS
 
 
+
 class FaceMeshDetector():
     def __init__(self, staticMode=False, maxFaces=2, minDetectionCon=0.5, minTrackCon=0.5):
         self.staticMode = staticMode
@@ -27,7 +28,7 @@ class FaceMeshDetector():
         self.results=self.faceMesh.process(self.imgRGB)
         faces=[]
         if self.results.multi_face_landmarks:
-            for faceLms in self.results.multi_face_landmarks:
+            for face_index,faceLms in enumerate(self.results.multi_face_landmarks):
                 if draw:
                     self.mpDraw.draw_landmarks(img,faceLms,FACEMESH_CONTOURS,
                     self.drawSpec,self.drawSpec)
@@ -38,11 +39,19 @@ class FaceMeshDetector():
                     print(id,x,y)
                     face.append([x,y])
                 faces.append(face)
+
+                #save the landmarks to a json file for each face
+                face_data = {"face_index": face_index, "landmarks": face}
+
+                
+
         return img,faces
 
     
     
 
+
+import json
 
 
 
@@ -51,18 +60,21 @@ def main():
     cap=cv2.VideoCapture("videos/video2.mp4")
     pTime=0
     detector=FaceMeshDetector()
+    image_counter = 0
     while True:
         success,img=cap.read()
         if not success:
             break
         img,faces=detector.findFaceMesh(img)
-        if(len(faces)!=0):
-            print(len(faces))
+    
+
+
+        
         cTime=time.time()
         fps=1/(cTime-pTime)
         pTime=cTime
         cv2.putText(img,f'FPS:{int(fps)}',(20,78),cv2.FONT_HERSHEY_PLAIN,
-        8.5,(0,255,0),3)
+        3,(0,255,0),3)
         cv2.imshow("Image",img)
         cv2.waitKey(1)
     cap.release()
